@@ -63,7 +63,25 @@
         padding:10px;
       }
 
+      div#holder {
+    position: relative;
+}
 
+.hidden {
+    display: none;
+}
+
+div.overlay {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    opacity: 0.7;
+    z-index: 1;
+}
+
+div.overlay.standard { background: #fff url(css/Loading_icon.gif) no-repeat 50% 50%; }
 
     </style>
   </head>
@@ -98,7 +116,11 @@
 
 <button onClick="onClick()">Display</button>
     </div>
-    <div id="map"></div>
+    <div id="holder" style="position: relative;">
+      <div class="overlay standard hidden">&nbsp</div>
+      <div id="map"></div>
+    </div>
+
     <script>
 
       // This example requires the Visualization library. Include the libraries=visualization
@@ -273,12 +295,14 @@
 
       //new function to get API data 
       function getNewData(lat,lng,cat) {
+        $('.overlay').show();
         $.get( "http://ec2-54-149-60-72.us-west-2.compute.amazonaws.com/business?lat="+lat+"&lng="+lng+"&cat="+cat, function(dat)
         {
          data = JSON.parse(dat);
          var points = getPoints(data);
          heatmap.setData(points);
          map.setCenter(new google.maps.LatLng(lat, lng));
+         $('.overlay').hide();
       });
       }
     
