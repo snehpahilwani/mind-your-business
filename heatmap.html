@@ -106,6 +106,7 @@
       // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
 
       var map, heatmap ,latitude, longitude, category;
+      var bounds,infowindow,rectangle;
 
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
@@ -194,16 +195,44 @@
           ]
         });
 
+        bounds = new google.maps.LatLngBounds();
+        rectangle = new google.maps.Rectangle({
+          bounds: bounds,
+          editable: true,
+          draggable: true
+        });
+
         heatmap = new google.maps.visualization.HeatmapLayer({
           data: getPoints(data),
           map: map
         });
 
+
+        rectangle.setMap(map);
+        rectangle.addListener('drag', showNewRect);
+        infoWindow = new google.maps.InfoWindow();
+
                  var input = document.getElementById('search');
       var autocomplete = new google.maps.places.Autocomplete(input);
       }
-          google.maps.event.addDomListener(window, 'load', init);
 
+          function showNewRect(event) {
+            var ne = rectangle.getBounds().getNorthEast();
+            var sw = rectangle.getBounds().getSouthWest();
+            var numB = data.filter(d => d.lat >= sw.lat() && d.lat <= ne.lat() &&
+              d.lng >= sw.lng() && d.lng <= ne.lng());
+            var summ = 0;
+            var weightSum = numB.forEach(d => summ += d.weight);
+            var contentString = '<b>Area Statistics</b><br>' +
+                'Number of Businesses: ' + numB.length  +  '<br>' +
+                'Average Rating: ' + parseFloat(summ/numB.length).toFixed(2);
+
+            // Set the info window's content and position.
+            infoWindow.setContent(contentString);
+            infoWindow.setPosition(ne);
+
+            infoWindow.open(map);
+          }
 
           //Get Latitutde Longitude value from textbox
           function GetLatlong(geocoder, callback)
@@ -244,9 +273,10 @@
 
       //new function to get API data 
       function getNewData(lat,lng,cat) {
-        $.get( "http://ec2-54-149-60-72.us-west-2.compute.amazonaws.com/business?lat="+lat+"&lng="+lng+"&cat="+cat, function(data)
+        $.get( "http://ec2-54-149-60-72.us-west-2.compute.amazonaws.com/business?lat="+lat+"&lng="+lng+"&cat="+cat, function(dat)
         {
-         var points = getPoints(JSON.parse(data));
+         data = JSON.parse(dat);
+         var points = getPoints(data);
          heatmap.setData(points);
          map.setCenter(new google.maps.LatLng(lat, lng));
       });
@@ -254,10 +284,17 @@
     
       
       function getPoints(dat) {
+          bounds = new google.maps.LatLngBounds();
         	var coordinates = [];
         	for(var i=0;i<dat.length;i++){
-        		coordinates.push({location: new google.maps.LatLng(dat[i]['lat'], dat[i]['lng']), weight: dat[i]['weight']});	
+        		var loc = new google.maps.LatLng(dat[i]['lat'], dat[i]['lng']);
+            bounds.extend(loc);
+            coordinates.push({location: loc, weight: dat[i]['weight']});
         	}
+          map.fitBounds(bounds);
+          rectangle.setBounds(bounds);
+          //bounds = paddedBounds(50, 70, 100, 30);
+
         	return coordinates;
       }
     </script>
