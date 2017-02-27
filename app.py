@@ -10,16 +10,9 @@ from pprint import pprint
 from yelpapi import YelpAPI
 import json as JSON
 import time
-yelp_api = YelpAPI('iHH-v_aKTI_vNAJeL6Jmag', 'IUgyiguE-4z7idZ7Yi48DpGGCKY', 'HRonseLc9wxZam_oXKUqiflwNlF-kd_G', 
-    'orfctLydn-gPVx3fNPvuBdQVOUM')
 
-#class GetTop5(Resource):
-#    def get(self, keyword, lat, lng):
-#        response = yelp_api.search_query(term=keyword, ll=lat+','+lng, sort=2, limit=5)
-#        return response['businesses']
-        #We can have PUT,DELETE,POST here. But in our API GET implementation is sufficient
- 
-#api.add_resource(GetTop5, '/yelp/ke')
+yelpKeys = JSON.load(open('keys.json'))
+yelp_api = YelpAPI(yelpKeys["yelp_consumerKey"], yelpKeys["yelp_consumerSecret"], yelpKeys["yelp_token"], yelpKeys["yelp_tokenSecret"])
 
 @app.route('/business')
 def api_business():
@@ -47,7 +40,6 @@ def api_business():
             if off+20 <= total:
                 off = off+20
             for business in response['businesses']:
-                #print business['name'] + " " + business['categories'][0][0] + " " + str(business['rating'])
                 lat = business['location']['coordinate']['latitude']
                 lng = business['location']['coordinate']['longitude']
                 features.append({"lat":lat, "lng":lng, "weight":business['rating'] })
